@@ -14,7 +14,7 @@ DEPENDS = " \
 S = "${WORKDIR}/git"
 
 SRC_URI = " \
-	git://go@github.com/IMT-CPAC/aoutils.git;protocol=ssh	\
+	git://git@github.com/IMT-CPAC/aoutils.git;protocol=ssh	\
 "
 
 FILES_${PN} = "${libdir}"
