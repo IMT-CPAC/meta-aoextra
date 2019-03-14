@@ -8,13 +8,13 @@
 do_update_management() {
     BUILDDIR=`pwd`
     echo BUILDDIR=${BUILDDIR}
-    if [ ! -d ${UPDATE_MANAGEMENT_CACHE} ]; then
+    if [ ! -d ${BUILDDIR}/${UPDATE_MANAGEMENT_CACHE} ]; then
         # Create cache and link deployed debs to it.
-        mkdir ${UPDATE_MANAGEMENT_CACHE}
+        mkdir ${BUILDDIR}/${UPDATE_MANAGEMENT_CACHE}
         cd ${BUILDDIR}/tmp/deploy/deb
         for file in */*.deb; do
-            mkdir -p ${UPDATE_MANAGEMENT_CACHE}/$file
-            cp $file ${UPDATE_MANAGEMENT_CACHE}/$file
+            mkdir -p ${BUILDDIR}/${UPDATE_MANAGEMENT_CACHE}/$file
+            cp $file ${BUILDDIR}/${UPDATE_MANAGEMENT_CACHE}/$file
         done
         rm -rf ${BUILDDIR}/updated-debs
     else
@@ -25,7 +25,7 @@ do_update_management() {
         # Any file that doesn't exist in the original is copied.
         cd ${BUILDDIR}/tmp/deploy/deb
         for file in */*.deb; do
-           if [ ! -e ${UPDATE_MANAGEMENT_CACHE}/$file ]; then
+           if [ ! -e ${BUILDDIR}/${UPDATE_MANAGEMENT_CACHE}/$file ]; then
                cp $file ${BUILDDIR}/updated-debs/`basename $file`
            fi
         done
