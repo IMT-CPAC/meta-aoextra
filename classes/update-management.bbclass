@@ -1,37 +1,37 @@
-
-# Postprocess the image and collect all debs in tmp/deploy/debs/*/*.deb.
-# Two support directories exist (or are created) to facilitate generation of updates.
-# If ${UPDATE_MANAGEMENT_CACHE} exists, debs that are different to those in this directory
-# are copied to updated-debs.  If ${UPDATE_MANAGEMENT_CACHE}  does not exist, it is created
-# and filled with a copy of the files in the deployed debs dir.
+#
+# If first time build, preserve a copy of the image manifest in the user build directory.
+# If a subsequent build, make copies of all .deb packages that are different from the
+# original manifest and place them in the updated-debs directory in the build directory.
 # 
 do_update_management() {
-    BUILDDIR=`pwd`
-    echo BUILDDIR=${BUILDDIR}
-    if [ ! -d ${BUILDDIR}/${UPDATE_MANAGEMENT_CACHE} ]; then
-        # Create cache and link deployed debs to it.
-        mkdir ${BUILDDIR}/${UPDATE_MANAGEMENT_CACHE}
-        cd ${BUILDDIR}/tmp/deploy/deb
-        for file in */*.deb; do
-            mkdir -p ${BUILDDIR}/${UPDATE_MANAGEMENT_CACHE}/$file
-            cp $file ${BUILDDIR}/${UPDATE_MANAGEMENT_CACHE}/$file
-        done
-        rm -rf ${BUILDDIR}/updated-debs
+    rm -rf ./updated-debs
+    if [ ! -e ./baseline-${IMAGE_BASENAME}-${MACHINE}.manifest ]; then
+        # Copy original manifest
+        cp ${IMAGE_MANIFEST} ./baseline-${IMAGE_BASENAME}-${MACHINE}.manifest
     else
         # Start with a fresh updated folder
-        rm -rf ${BUILDDIR}/updated-debs
-        mkdir ${BUILDDIR}/updated-debs
+        mkdir ./updated-debs
 
-        # Any file that doesn't exist in the original is copied.
-        cd ${BUILDDIR}/tmp/deploy/deb
-        for file in */*.deb; do
-           if [ ! -e ${BUILDDIR}/${UPDATE_MANAGEMENT_CACHE}/$file ]; then
-               cp $file ${BUILDDIR}/updated-debs/`basename $file`
+        # Any deb not in baseline is added to updated-debs
+        for line in `cat ${IMAGE_MANIFEST} ./baseline-${IMAGE_BASENAME}-${MACHINE}.manifest | sort | uniq -u | tr ' ' '_'`; do
+           echo "line = ${line}"
+           name="$(echo ${line} | cut -d'_' -f1)"
+           section="$(echo ${line} | cut -d'_' -f2)"
+           version="$(echo ${line} | cut -d'_' -f3 | sed -e 's/[0-9]*://')"
+           if [ "${section}" = "all" ]; then
+               arch="all"
+           else
+               arch="${DPKG_ARCH}"
+           fi
+           pathname="./tmp/deploy/deb/${section}/${name}_${version}_${arch}.deb"
+           if [ -e ${pathname} ]; then
+              cp ${pathname} ./updated-debs
+           else
+              echo ${pathname} >> ./updated-debs/removed-files
            fi
         done
     fi
-    cd ${BUILDDIR}
 }
 
-IMAGE_POSTPROCESS_COMMAND = "do_update_management"
+IMAGE_POSTPROCESS_COMMAND += "do_update_management;"
 
