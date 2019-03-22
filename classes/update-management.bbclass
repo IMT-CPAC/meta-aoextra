@@ -2,6 +2,7 @@
 # If first time build, preserve a copy of the image manifest in the user build directory.
 # If a subsequent build, make copies of all .deb packages that are different from the
 # original manifest and place them in the updated-debs directory in the build directory.
+# Create a list 'uninstall' of files that are no longer in the package set.
 # 
 do_update_management() {
     rm -rf ./updated-debs
@@ -27,7 +28,7 @@ do_update_management() {
            if [ -e ${pathname} ]; then
               cp ${pathname} ./updated-debs
            else
-              echo ${pathname} >> ./updated-debs/removed-files
+              echo `basename ${pathname%.deb}` >> ./updated-debs/uninstall
            fi
         done
     fi
