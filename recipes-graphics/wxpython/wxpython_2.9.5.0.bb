@@ -1,7 +1,7 @@
 HOMEPAGE = "http://www.wxpython.org"
 
 LICENSE = "WXwindows"
-LIC_FILES_CHKSUM = "file://licence/licence.txt;md5=18346072db6eb834b6edbd2cdc4f109b"
+LIC_FILES_CHKSUM = "file://wxPython/licence/licence.txt;md5=18346072db6eb834b6edbd2cdc4f109b"
 
 DEPENDS = "wxwidgets gstreamer"
 
@@ -9,7 +9,8 @@ SRC_URI = "${SOURCEFORGE_MIRROR}/wxpython/wxPython-src-${PV}.tar.bz2"
 SRC_URI[md5sum] = "a2a28fe8223391c93bf8788316767c9e"
 SRC_URI[sha256sum] = "1a5b7e771eff467538d0834136188e8a7506a4fe6e85d0a46c40158cdbd4c48c"
 
-S = "${WORKDIR}/wxPython-src-${PV}/wxPython"
+S = "${WORKDIR}/wxPython-src-${PV}"
+B = "${S}/wxPython"
 
 inherit pkgconfig pythonnative python-dir distutils
 

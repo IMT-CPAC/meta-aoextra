@@ -2,7 +2,7 @@ DESCRIPTION = "wxWidgets is a cross platform application framework utilizing nat
 HOMEPAGE = "http://www.wxpython.org"
 
 LICENSE = "WXwindows"
-LIC_FILES_CHKSUM = "file://licence/licence.txt;md5=18346072db6eb834b6edbd2cdc4f109b"
+LIC_FILES_CHKSUM = "file://wxPython/licence/licence.txt;md5=18346072db6eb834b6edbd2cdc4f109b"
 
 DEPENDS = "wxwidgets"
 
@@ -10,7 +10,8 @@ SRC_URI = "${SOURCEFORGE_MIRROR}/wxpython/wxPython-src-${PV}.tar.bz2"
 SRC_URI[md5sum] = "f4a4c228a2256c5804ec4996aa683b89"
 SRC_URI[sha256sum] = "d51463fe760e2fc00271678700c216809f9db32a6081a1808bd4b7c884dc0a32"
 
-S = "${WORKDIR}/wxPython-src-${PV}/wxPython"
+S = "${WORKDIR}/wxPython-src-${PV}"
+B = "${S}/wxPython"
 
 inherit pkgconfig pythonnative python-dir distutils
 
