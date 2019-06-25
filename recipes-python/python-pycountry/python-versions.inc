@@ -1,0 +1,1 @@
+PREFERRED_VERSION_python-pycountry = "18.12.8"
