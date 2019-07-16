@@ -13,23 +13,28 @@ do_update_management() {
         # Start with a fresh updated folder
         mkdir ./updated-debs
 
+        # Tack a requried_release into the package area
+        if [ "${UPDATE_ONLY_FROM_VERSION}" != "" ]; then
+            echo "${UPDATE_ONLY_FROM_VERSION}" >> ./updated-debs/update-only-from-version
+        fi
+
         # Any deb not in baseline is added to updated-debs
         for line in `cat ${IMAGE_MANIFEST} ./baseline-${IMAGE_BASENAME}-${MACHINE}.manifest | sort | uniq -u | tr ' ' '_'`; do
-           echo "line = ${line}"
-           name="$(echo ${line} | cut -d'_' -f1)"
-           section="$(echo ${line} | cut -d'_' -f2)"
-           version="$(echo ${line} | cut -d'_' -f3 | sed -e 's/[0-9]*://')"
-           if [ "${section}" = "all" ]; then
-               arch="all"
-           else
-               arch="${DPKG_ARCH}"
-           fi
-           pathname="./tmp/deploy/deb/${section}/${name}_${version}_${arch}.deb"
-           if [ -e ${pathname} ]; then
-              cp ${pathname} ./updated-debs
-           else
-              echo `basename ${pathname%.deb}` >> ./updated-debs/uninstall
-           fi
+            echo "line = ${line}"
+            name="$(echo ${line} | cut -d'_' -f1)"
+            section="$(echo ${line} | cut -d'_' -f2)"
+            version="$(echo ${line} | cut -d'_' -f3 | sed -e 's/[0-9]*://')"
+            if [ "${section}" = "all" ]; then
+                arch="all"
+            else
+                arch="${DPKG_ARCH}"
+            fi
+            pathname="./tmp/deploy/deb/${section}/${name}_${version}_${arch}.deb"
+            if [ -e ${pathname} ]; then
+                cp ${pathname} ./updated-debs
+            else
+                echo `basename ${pathname%.deb}` >> ./updated-debs/uninstall
+            fi
         done
     fi
 }
