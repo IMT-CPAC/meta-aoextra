@@ -112,9 +112,9 @@ index 417ab54..ab2dd08 100644
 +   if (!PyArg_ParseTuple(args, "i", &priority))
 +      return NULL;
 +
-+   set_realtime(priority);
++   int rc = set_realtime(priority);
 +
-+   Py_RETURN_NONE;
++   return Py_BuildValue("i", rc);
 +}
 +
  static const char moduledocstring[] = "GPIO functionality of a Raspberry Pi using Python";
