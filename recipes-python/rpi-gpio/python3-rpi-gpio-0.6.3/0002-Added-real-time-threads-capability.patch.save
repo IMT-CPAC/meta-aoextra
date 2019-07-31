@@ -1,0 +1,146 @@
+From ded7e2a7c0aa886183c17090c928e88f692f9bfd Mon Sep 17 00:00:00 2001
+From: Gary Oliver <go@aerodesic.com>
+Date: Tue, 13 Mar 2018 18:38:32 -0700
+Subject: [PATCH] Added real-time threads capability
+
+---
+ source/c_gpio.c     | 40 ++++++++++++++++++++++++++++++++++++++++
+ source/c_gpio.h     |  4 ++++
+ source/event_gpio.c |  2 +-
+ source/py_gpio.c    | 15 +++++++++++++++
+ source/py_pwm.c     |  6 ++++--
+ source/soft_pwm.c   |  2 +-
+ 6 files changed, 65 insertions(+), 4 deletions(-)
+
+diff --git a/source/c_gpio.c b/source/c_gpio.c
+index b69880f..543a960 100644
+--- a/source/c_gpio.c
++++ b/source/c_gpio.c
+@@ -275,3 +275,43 @@ void cleanup(void)
+ {
+     munmap((void *)gpio_map, BLOCK_SIZE);
+ }
++
++/*
++ * Realtime controls.
++ *
++ * Allow setting up attributes for all companion threads to enable a realtime response.
++ */
++pthread_attr_t *thread_attrp = NULL;
++pthread_attr_t thread_attr;
++struct sched_param thread_params;
++
++int set_realtime(int priority)
++{
++    int rc = 0;
++
++    if (priority >= 1 && priority <= 99)
++    {
++        pthread_attr_init(&thread_attr);
++        rc = pthread_attr_setschedpolicy(&thread_attr, SCHED_FIFO) != 0;
++        thread_params.sched_priority = priority;
++        rc |= pthread_attr_setschedparam(&thread_attr, &thread_params) != 0;
++        thread_attrp = &thread_attr;
++    }
++    else
++    if (priority == 0)
++    {
++        thread_attrp = NULL;
++    }
++    else
++    {
++        rc = 1;
++    }
++
++    return rc;
++}
++
++pthread_attr_t *get_realtime_attr(void)
++{
++    return thread_attrp;
++}
++
+diff --git a/source/c_gpio.h b/source/c_gpio.h
+index 06cb4ea..0e460af 100644
+--- a/source/c_gpio.h
++++ b/source/c_gpio.h
+@@ -20,6 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ */
+ 
++#include <pthread.h>
++
+ int setup(void);
+ void setup_gpio(int gpio, int direction, int pud);
+ int gpio_function(int gpio);
+@@ -31,6 +33,8 @@ void set_high_event(int gpio, int enable);
+ void set_low_event(int gpio, int enable);
+ int eventdetected(int gpio);
+ void cleanup(void);
++int set_realtime(int priority);
++pthread_attr_t *get_thread_attr(void);
+ 
+ #define SETUP_OK           0
+ #define SETUP_DEVMEM_FAIL  1
+diff --git a/source/event_gpio.c b/source/event_gpio.c
+index c28a140..5a34948 100644
+--- a/source/event_gpio.c
++++ b/source/event_gpio.c
+@@ -478,7 +478,7 @@ int add_edge_detect(unsigned int gpio, unsigned int edge, int bouncetime)
+ 
+     // start poll thread if it is not already running
+     if (!thread_running) {
+-        if (pthread_create(&threads, NULL, poll_thread, (void *)t) != 0) {
++        if (pthread_create(&threads, get_realtime_attr(), poll_thread, (void *)t) != 0) {
+            remove_edge_detect(gpio);
+            return 2;
+         }
+diff --git a/source/py_gpio.c b/source/py_gpio.c
+index 417ab54..ab2dd08 100644
+--- a/source/py_gpio.c
++++ b/source/py_gpio.c
+@@ -952,6 +952,20 @@ static PyObject *py_setwarnings(PyObject *self, PyObject *args)
+    Py_RETURN_NONE;
+ }
+ 
++
++// python function set_realtime(priority=0)
++static PyObject *py_setrealtime(PyObject *self, PyObject *args)
++{
++   int priority = 0;
++
++   if (!PyArg_ParseTuple(args, "i", &priority))
++      return NULL;
++
++   int rc = set_realtime(priority);
++
++   return Py_BuildValue("i", rc);
++}
++
+ static const char moduledocstring[] = "GPIO functionality of a Raspberry Pi using Python";
+ 
+ PyMethodDef rpi_gpio_methods[] = {
+@@ -968,6 +982,7 @@ PyMethodDef rpi_gpio_methods[] = {
+    {"wait_for_edge", (PyCFunction)py_wait_for_edge, METH_VARARGS | METH_KEYWORDS, "Wait for an edge.  Returns the channel number or None on timeout.\nchannel      - either board pin number or BCM number depending on which mode is set.\nedge         - RISING, FALLING or BOTH\n[bouncetime] - time allowed between calls to allow for switchbounce\n[timeout]    - timeout in ms"},
+    {"gpio_function", py_gpio_function, METH_VARARGS, "Return the current GPIO function (IN, OUT, PWM, SERIAL, I2C, SPI)\nchannel - either board pin number or BCM number depending on which mode is set."},
+    {"setwarnings", py_setwarnings, METH_VARARGS, "Enable or disable warning messages"},
++   {"set_realtime", py_setrealtime, METH_VARARGS, "Enable RT priority for all threads"},
+    {NULL, NULL, 0, NULL}
+ };
+ 
+diff --git a/source/soft_pwm.c b/source/soft_pwm.c
+index 9c1386b..d8e9612 100644
+--- a/source/soft_pwm.c
++++ b/source/soft_pwm.c
+@@ -197,7 +197,7 @@ void pwm_start(unsigned int gpio)
+         return;
+ 
+     p->running = 1;
+-    if (pthread_create(&threads, NULL, pwm_thread, (void *)p) != 0)
++    if (pthread_create(&threads, get_realtime_attr(), pwm_thread, (void *)p) != 0)
+     {
+         // btc fixme - error
+         p->running = 0;
+-- 
+2.7.4
+
