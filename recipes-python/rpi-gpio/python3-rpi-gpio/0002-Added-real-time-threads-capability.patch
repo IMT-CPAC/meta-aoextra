@@ -37,9 +37,9 @@ index b69880f..543a960 100644
 +    if (priority >= 1 && priority <= 99)
 +    {
 +        pthread_attr_init(&thread_attr);
-+        pthread_attr_setschedpolicy(&thread_attr, SCHED_FIFO);
++        rc = pthread_attr_setschedpolicy(&thread_attr, SCHED_FIFO) != 0;
 +        thread_params.sched_priority = priority;
-+        pthread_attr_setschedparam(&thread_attr, &thread_params);
++        rc |= pthread_attr_setschedparam(&thread_attr, &thread_params) != 0;
 +        thread_attrp = &thread_attr;
 +    }
 +    else
