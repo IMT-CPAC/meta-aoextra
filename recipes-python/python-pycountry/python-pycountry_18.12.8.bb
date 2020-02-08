@@ -14,3 +14,5 @@ S = "${WORKDIR}/pycountry-18.12.8"
 RDEPENDS_${PN} = ""
 
 inherit setuptools
+
+BBCLASSEXTEND = "native"

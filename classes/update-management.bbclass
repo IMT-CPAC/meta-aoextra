@@ -36,6 +36,31 @@ do_update_management() {
                 echo `basename ${pathname%.deb}` >> ./updated-debs/uninstall
             fi
         done
+
+        # any package in FORCED_UPDATE is also moved if not already there
+        for package in ${FORCED_UPDATE}; do
+            bbwarn "looking at '${package}'"
+            tr ' ' '_' <./baseline-${IMAGE_BASENAME}-${MACHINE}.manifest | grep "^${package}_" | while read -r line; do
+                bbwarn "processing '${line}'"
+                if [ -n "${line}" ]; then
+                    bbwarn "forced update for ${line}"
+                    name="$(echo ${line} | cut -d'_' -f1)"
+                    section="$(echo ${line} | cut -d'_' -f2)"
+                    version="$(echo ${line} | cut -d'_' -f3 | sed -e 's/[0-9]*://')"
+                    if [ "${section}" = "all" ]; then
+                        arch="all"
+                    else
+                        arch="${DPKG_ARCH}"
+                    fi
+                    pathname="./tmp/deploy/deb/${section}/${name}_${version}_${arch}.deb"
+                    if [ -e ${pathname} ]; then
+                        cp ${pathname} ./updated-debs
+                    else
+                        bbwarn "${pathname} not found"
+                    fi
+                fi
+            done
+        done
     fi
 }
 
