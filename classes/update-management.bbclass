@@ -3,7 +3,8 @@
 # If a subsequent build, make copies of all .deb packages that are different from the
 # original manifest and place them in the updated-debs directory in the build directory.
 # Create a list 'uninstall' of files that are no longer in the package set.
-# 
+#
+# !!! CAN I RECAST THIS IN PYTHON SCRIPT ??? !!!
 do_update_management() {
     rm -rf ./updated-debs
     if [ ! -e ./baseline-${IMAGE_BASENAME}-${MACHINE}.manifest ]; then
@@ -17,6 +18,9 @@ do_update_management() {
         if [ "${UPDATE_ONLY_FROM_VERSION}" != "" ]; then
             echo "${UPDATE_ONLY_FROM_VERSION}" >> ./updated-debs/update-only-from-version
         fi
+
+        # A BUG HERE> If a package is in not in the current manifest but in the baseline,
+        # the file is INCLUDED rather than REMOVED.
 
         # Any deb not in baseline is added to updated-debs
         for line in `cat ${IMAGE_MANIFEST} ./baseline-${IMAGE_BASENAME}-${MACHINE}.manifest | sort | uniq -u | tr ' ' '_'`; do
@@ -39,9 +43,9 @@ do_update_management() {
 
         # any package in FORCED_UPDATE is also moved if not already there
         for package in ${FORCED_UPDATE}; do
-            bbwarn "looking at '${package}'"
+            # bbwarn "looking at '${package}'"
             tr ' ' '_' <./baseline-${IMAGE_BASENAME}-${MACHINE}.manifest | grep "^${package}_" | while read -r line; do
-                bbwarn "processing '${line}'"
+                # bbwarn "processing '${line}'"
                 if [ -n "${line}" ]; then
                     bbwarn "forced update for ${line}"
                     name="$(echo ${line} | cut -d'_' -f1)"
