@@ -6,23 +6,23 @@
 #
 # !!! CAN I RECAST THIS IN PYTHON SCRIPT ??? !!!
 do_update_management() {
-    rm -rf ./updated-debs
+    rm -rf ./updated-debs-${IMAGE_BASENAME}
     if [ ! -e ./baseline-${IMAGE_BASENAME}-${MACHINE}.manifest ]; then
         # Copy original manifest
         cp ${IMAGE_MANIFEST} ./baseline-${IMAGE_BASENAME}-${MACHINE}.manifest
     else
         # Start with a fresh updated folder
-        mkdir ./updated-debs
+        mkdir ./updated-debs-${IMAGE_BASENAME}
 
         # Tack a requried_release into the package area
         if [ "${UPDATE_ONLY_FROM_VERSION}" != "" ]; then
-            echo "${UPDATE_ONLY_FROM_VERSION}" >> ./updated-debs/update-only-from-version
+            echo "${UPDATE_ONLY_FROM_VERSION}" >> ./updated-debs-${IMAGE_BASENAME}/update-only-from-version
         fi
 
         # A BUG HERE> If a package is in not in the current manifest but in the baseline,
         # the file is INCLUDED rather than REMOVED.
 
-        # Any deb not in baseline is added to updated-debs
+        # Any deb not in baseline is added to updated-debs-${IMAGE_BASENAME}
         for line in `cat ${IMAGE_MANIFEST} ./baseline-${IMAGE_BASENAME}-${MACHINE}.manifest | sort | uniq -u | tr ' ' '_'`; do
             echo "line = ${line}"
             name="$(echo ${line} | cut -d'_' -f1)"
@@ -35,9 +35,9 @@ do_update_management() {
             fi
             pathname="./tmp/deploy/deb/${section}/${name}_${version}_${arch}.deb"
             if [ -e ${pathname} ]; then
-                cp ${pathname} ./updated-debs
+                cp ${pathname} ./updated-debs-${IMAGE_BASENAME}
             else
-                echo `basename ${pathname%.deb}` >> ./updated-debs/uninstall
+                echo `basename ${pathname%.deb}` >> ./updated-debs-${IMAGE_BASENAME}/uninstall
             fi
         done
 
@@ -58,7 +58,7 @@ do_update_management() {
                     fi
                     pathname="./tmp/deploy/deb/${section}/${name}_${version}_${arch}.deb"
                     if [ -e ${pathname} ]; then
-                        cp ${pathname} ./updated-debs
+                        cp ${pathname} ./updated-debs-${IMAGE_BASENAME}/
                     else
                         bbwarn "${pathname} not found"
                     fi
