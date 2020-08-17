@@ -12,5 +12,9 @@ SRC_URI = "\
 	http://pypi.python.org/packages/source/l/${SRCNAME}/${SRCNAME}-${PV}.tar.gz	\
 "
 
+RDEPENDS_${PN} = "\
+	labjack-lib	\
+"
+
 S = "${WORKDIR}/${SRCNAME}-${PV}"
 
