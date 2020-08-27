@@ -37,6 +37,7 @@ SRC_URI = " \
     file://musl/0004-musl-process-util.patch \
     file://musl/0005-musl-avoid-further-conflicts-by-including-net-ethern.patch \
     file://musl/0006-Add-a-strndupa-replacement-for-musl.patch \
+    file://100-disable-wifi-mac-randomization.conf \
 "
 
 
@@ -148,4 +149,5 @@ SYSTEMD_SERVICE_${PN} = "NetworkManager.service NetworkManager-dispatcher.servic
 
 do_install_append() {
     rm -rf ${D}/run ${D}${localstatedir}/run
+    install -m 0600 ${WORKDIR}/*.conf ${D}${sysconfdir}/NetworkManager/conf.d/
 }
