@@ -11,7 +11,7 @@ VERSION_MINOR_FIXED  = "${@d.getVar('VERSION_MINOR', True)[-2:]}"
 
 VERSION = "${VERSION_MAJOR}.${VERSION_MIDDLE_FIXED}${VERSION_MINOR_FIXED}"
 
-S = "${WORKDIR}/LabJackM-${VERSION}-Raspbian-Linux-armhf/"
+S = "${WORKDIR}/LabJackM-${VERSION}-Raspbian-Linux-armhf"
 
 # Avoid the 'stripped' warning for the library
 INSANE_SKIP_${PN} = "ldflags textrel dev-so"

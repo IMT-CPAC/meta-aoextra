@@ -1,0 +1,71 @@
+diff --git a/build.py b/build.py
+index f2eb0449..e4fff86e 100755
+--- a/build.py
++++ b/build.py
+@@ -455,6 +455,8 @@ def makeOptionParser():
+         ("regenerate_sysconfig", (False, "Waf uses Python's sysconfig and related tools to configure the build. In some cases that info can be incorrect, so this option regenerates it. Must have write access to Python's lib folder.")),
+         ("no_allmo",       (False, "Skip regenerating the wxWidgets message catalogs")),
+         ("no_msedge",      (False, "Do not include the MS Edge backend for wx.html2.WebView. (Windows only)")),
++        ('host',           ('',    "If cross compiling, target host descriptor")),
++        ('build_host',     ('',    "If cross compiling, build host descriptor")),
+         ]
+ 
+     parser = optparse.OptionParser("build options:")
+@@ -1413,6 +1415,15 @@ def cmd_build_wx(options, args):
+ 
+     build_options = ['--wxpython', '--unicode']
+ 
++    if options.host or options.build_host:
++        features = []
++        if options.host:
++            features.append("--host=%s" % options.host)
++        if options.build_host:
++            features.append("--build=%s" % options.build_host)
++
++        build_options.append("--features='%s'" % ' '.join(features))
++
+     if options.jobs:
+         build_options.append('--jobs=%s' % options.jobs)
+ 
+diff --git a/setup.py b/setup.py
+index a215da7c..427e6157 100644
+--- a/setup.py
++++ b/setup.py
+@@ -107,11 +107,15 @@ class wx_build(orig_build):
+     """
+     user_options = [
+         ('skip-build', None, 'skip building the C/C++ code (assumes it has already been done)'),
++        ('host=',      None, 'If cross compiling, target host descriptor' ),
++        ('build=',     None, 'If cross compiling, build host descriptor' ),
+         ]
+     boolean_options = ['skip-build']
+ 
+ 
+     def initialize_options(self):
++        self.host = None
++        self.build = None
+         orig_build.initialize_options(self)
+         self.skip_build = '--skip-build' in sys.argv
+ 
+@@ -130,6 +134,13 @@ class wx_build(orig_build):
+ 
+             # Use the same Python that is running this script.
+             cmd = ['"{}"'.format(sys.executable), '-u', 'build.py', 'build']
++            # Pass the cross-compile information to the build phase.
++            # These get passed to configure eventually.
++            if self.host:
++                cmd.append("--host=%s" % self.host)
++            if self.build:
++                # Name changed to build_host because build.py has a 'build_dir' parameter
++                cmd.append("--build_host=%s" % self.build)
+             cmd = ' '.join(cmd)
+             runcmd(cmd)
+ 
+@@ -353,7 +364,6 @@ BUILD_OPTIONS = { } #'build_base' : cfg.BUILD_BASE }
+ 
+ #----------------------------------------------------------------------
+ 
+-
+ if __name__ == '__main__':
+     setup(name             = NAME,
+           version          = cfg.VERSION,
