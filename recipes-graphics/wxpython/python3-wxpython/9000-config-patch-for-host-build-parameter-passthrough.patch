@@ -28,7 +28,7 @@ index f2eb0449..e4fff86e 100755
          build_options.append('--jobs=%s' % options.jobs)
  
 diff --git a/setup.py b/setup.py
-index a215da7c..427e6157 100644
+index a215da7c..9a0b3e77 100644
 --- a/setup.py
 +++ b/setup.py
 @@ -107,11 +107,15 @@ class wx_build(orig_build):
@@ -61,11 +61,34 @@ index a215da7c..427e6157 100644
              cmd = ' '.join(cmd)
              runcmd(cmd)
  
-@@ -353,7 +364,6 @@ BUILD_OPTIONS = { } #'build_base' : cfg.BUILD_BASE }
+@@ -234,12 +245,11 @@ class wx_install(orig_install):
+         orig_install.finalize_options(self)
+         self.install_lib = self.install_platlib
+ 
++    # Give the --host and --build_host baggage to build task
+     def run(self):
+         self.run_command("build")
+         orig_install.run(self)
+ 
+-
+-
+ class wx_sdist(orig_sdist):
+     def run(self):
+         # Use build.py to perform the sdist
+@@ -353,8 +363,15 @@ BUILD_OPTIONS = { } #'build_base' : cfg.BUILD_BASE }
  
  #----------------------------------------------------------------------
  
 -
  if __name__ == '__main__':
++
++    # Mine the args for host and build targets and add to options
++    for opt in [ '--host=', '--build=' ]:
++        for arg in sys.argv:
++            if arg.startswith(opt):
++                BUILD_OPTIONS[opt[2:-1]] = arg[len(opt):]
++                sys.argv.remove(arg)
++
      setup(name             = NAME,
            version          = cfg.VERSION,
+           description      = DESCRIPTION,
