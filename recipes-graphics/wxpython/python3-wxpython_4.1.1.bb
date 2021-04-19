@@ -5,14 +5,14 @@ LIC_FILES_CHKSUM = "file://LICENSE.txt;md5=fce1d18e2d633d41786c0a8dfbc80917"
 PYPI_PACKAGE = "wxPython"
 
 DEPENDS = "\
-	wxwidgets		\
-	gtk+3			\
-	"
+    wxwidgets                   \
+    gtk+3                       \
+"
 
 RDEPENDS_${PN} = "\
-	wxwidgets		\
-	gtk+3			\
-	"
+    wxwidgets                   \
+    gtk+3                       \
+"
 
 inherit pypi setuptools3 distutils3
 
@@ -23,8 +23,8 @@ SRC_URI[sha256sum] = "00e5e3180ac7f2852f342ad341d57c44e7e4326de0b550b9a5c4a8361b
 
 # Add patch file(s)
 SRC_URI += "\
-	file://9000-config-patch-for-version-3.patch	\
-	"
+    file://9000-config-patch-for-version-3.patch        \
+"
 
 S = "${WORKDIR}/wxPython-${PV}"
 
