@@ -33,12 +33,48 @@ S = "${WORKDIR}/wxPython-${PV}"
 CROSS_COMPILE_ARGS="--host=${TARGET_ARCH}${TARGET_VENDOR}-${TARGET_OS}"
 
 do_compile() {
+    cd ${S} \
     NO_FETCH_BUILD=1 \
     STAGING_INCDIR=${STAGING_INCDIR} \
     STAGING_LIBDIR=${STAGING_LIBDIR} \
     ${STAGING_BINDIR_NATIVE}/${PYTHON_PN}-native/${PYTHON_PN} setup.py \
     build ${DISTUTILS_BUILD_ARGS} ${CROSS_COMPILE_ARGS} || \
     bbfatal_log "'${PYTHON_PN} setup.py build ${DISTUTILS_BUILD_ARGS}' execution failed."
+}
+
+# This is supplied instead of the default because wxPython build.py doesn't grok the 'base-build' option.
+# It instead uses {destdir}/${prefix} pair.
+
+do_install() {
+        cd ${S}
+        install -d ${D}${PYTHON_SITEPACKAGES_DIR}
+
+        STAGING_INCDIR=${STAGING_INCDIR} \
+        STAGING_LIBDIR=${STAGING_LIBDIR} \
+        PYTHONPATH=${D}${PYTHON_SITEPACKAGES_DIR} \
+        ${STAGING_BINDIR_NATIVE}/${PYTHON_PN}-native/${PYTHON_PN} setup.py install --install-lib=${D}/${PYTHON_SITEPACKAGES_DIR} ${DISTUTILS_INSTALL_ARGS} || \
+        bbfatal_log "'${PYTHON_PN} setup.py install ${DISTUTILS_INSTALL_ARGS}' execution failed."
+
+        # support filenames with *spaces*
+        find ${D} -name "*.py" -exec grep -q ${D} {} \; \
+                               -exec sed -i -e s:${D}::g {} \;
+
+        for i in ${D}${bindir}/* ${D}${sbindir}/*; do
+            if [ -f "$i" ]; then
+                sed -i -e s:${PYTHON}:${USRBINPATH}/env\ ${DISTUTILS_PYTHON}:g $i
+                sed -i -e s:${STAGING_BINDIR_NATIVE}:${bindir}:g $i
+            fi
+        done
+
+        rm -f ${D}${PYTHON_SITEPACKAGES_DIR}/easy-install.pth
+
+        #
+        # FIXME: Bandaid against wrong datadir computation
+        #
+        if [ -e ${D}${datadir}/share ]; then
+            mv -f ${D}${datadir}/share/* ${D}${datadir}/
+            rmdir ${D}${datadir}/share
+        fi
 }
 
 BBCLASSEXTEND = "native nativesdk"

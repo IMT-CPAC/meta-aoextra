@@ -9,6 +9,8 @@ LIC_FILES_CHKSUM = "file://LICENCE.txt;md5=9b95630a648966b142f1a0dcea001cb7"
 PYPI_PACKAGE = "RPi.GPIO"
 inherit pypi distutils3
 
+CFLAGS_append = "-fcommon"
+
 SRC_URI += " \
 	file://0002-Added-real-time-threads-capability.patch \
 "
